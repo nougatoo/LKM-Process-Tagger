@@ -1,0 +1,277 @@
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/arch/x86/include/asm/unistd_32.h /media/other/lin/arch/x86/include/asm/unistd_32.h
+--- /media/other/linux-2.6.32.60/arch/x86/include/asm/unistd_32.h	2012-10-07 15:41:24.000000000 -0600
++++ /media/other/lin/arch/x86/include/asm/unistd_32.h	2014-10-30 16:38:04.000000000 -0600
+@@ -342,10 +342,11 @@
+ #define __NR_pwritev		334
+ #define __NR_rt_tgsigqueueinfo	335
+ #define __NR_perf_event_open	336
++#define __NR_ptag 		337
+ 
+ #ifdef __KERNEL__
+ 
+-#define NR_syscalls 337
++#define NR_syscalls 338
+ 
+ #define __ARCH_WANT_IPC_PARSE_VERSION
+ #define __ARCH_WANT_OLD_READDIR
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/arch/x86/include/asm/unistd_64.h /media/other/lin/arch/x86/include/asm/unistd_64.h
+--- /media/other/linux-2.6.32.60/arch/x86/include/asm/unistd_64.h	2012-10-07 15:41:24.000000000 -0600
++++ /media/other/lin/arch/x86/include/asm/unistd_64.h	2014-10-30 14:44:19.000000000 -0600
+@@ -661,6 +661,8 @@
+ __SYSCALL(__NR_rt_tgsigqueueinfo, sys_rt_tgsigqueueinfo)
+ #define __NR_perf_event_open			298
+ __SYSCALL(__NR_perf_event_open, sys_perf_event_open)
++#define __NR_ptag				337
++__SYSCALL(__NR_ptag, sys_ptag)		
+ 
+ #ifndef __NO_STUBS
+ #define __ARCH_WANT_OLD_READDIR
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/arch/x86/Kconfig /media/other/lin/arch/x86/Kconfig
+--- /media/other/linux-2.6.32.60/arch/x86/Kconfig	2012-10-07 15:41:24.000000000 -0600
++++ /media/other/lin/arch/x86/Kconfig	2014-10-30 16:19:16.000000000 -0600
+@@ -2116,3 +2116,5 @@
+ source "arch/x86/kvm/Kconfig"
+ 
+ source "lib/Kconfig"
++
++source "ptag/Kconfig"
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/arch/x86/kernel/syscall_table_32.S /media/other/lin/arch/x86/kernel/syscall_table_32.S
+--- /media/other/linux-2.6.32.60/arch/x86/kernel/syscall_table_32.S	2012-10-07 15:41:24.000000000 -0600
++++ /media/other/lin/arch/x86/kernel/syscall_table_32.S	2014-10-30 14:40:45.000000000 -0600
+@@ -336,3 +336,4 @@
+ 	.long sys_pwritev
+ 	.long sys_rt_tgsigqueueinfo	/* 335 */
+ 	.long sys_perf_event_open
++	.long sys_ptag
+
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/include/linux/sched.h /media/other/lin/include/linux/sched.h
+--- /media/other/linux-2.6.32.60/include/linux/sched.h	2012-10-07 15:41:24.000000000 -0600
++++ /media/other/lin/include/linux/sched.h	2014-11-08 23:30:26.034345897 -0700
+@@ -91,6 +91,7 @@
+ #include <linux/kobject.h>
+ #include <linux/latencytop.h>
+ #include <linux/cred.h>
++#include <linux/list.h>
+ 
+ #include <asm/processor.h>
+ 
+@@ -102,6 +103,13 @@
+ struct bts_context;
+ struct perf_event_context;
+ 
++struct tag_list {
++	
++	char *tag_name;
++	struct list_head list;
++	
++};
++
+ /*
+  * List of flags we want to share for kernel threads,
+  * if only because they are not used by them anyway.
+@@ -1221,6 +1229,7 @@
+ 	unsigned int flags;	/* per process flags, defined below */
+ 	unsigned int ptrace;
+ 
++
+ 	int lock_depth;		/* BKL lock depth */
+ 
+ #ifdef CONFIG_SMP
+@@ -1540,6 +1549,17 @@
+ 	/* bitmask of trace recursion */
+ 	unsigned long trace_recursion;
+ #endif /* CONFIG_TRACING */
++
++
++	struct tag_list *tmp;
++	int is_init;
++	int help;
++	struct tag_list myList;
++	//LIST_HEAD(myList);	
++	//myList.list.next = myList;
++	//myList.list.prev = myList;
++
++	char *ptag;
+ };
+ 
+ /* Future-safe accessor for struct task_struct's cpus_allowed. */
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/include/linux/syscalls.h /media/other/lin/include/linux/syscalls.h
+--- /media/other/linux-2.6.32.60/include/linux/syscalls.h	2012-10-07 15:41:24.000000000 -0600
++++ /media/other/lin/include/linux/syscalls.h	2014-11-09 22:13:11.503197856 -0700
+@@ -885,4 +885,6 @@
+ asmlinkage long sys_mmap_pgoff(unsigned long addr, unsigned long len,
+ 			unsigned long prot, unsigned long flags,
+ 			unsigned long fd, unsigned long pgoff);
++
++asmlinkage long sys_ptag(pid_t pid, int func, char * tag, int size, int uid);
+ #endif
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/Makefile /media/other/lin/Makefile
+--- /media/other/linux-2.6.32.60/Makefile	2012-10-07 15:41:24.000000000 -0600
++++ /media/other/lin/Makefile	2014-11-06 14:18:16.005295683 -0700
+@@ -1,7 +1,7 @@
+ VERSION = 2
+ PATCHLEVEL = 6
+ SUBLEVEL = 32
+-EXTRAVERSION = .60
++EXTRAVERSION = .60.custom457.2
+ NAME = Man-Eating Seals of Antiquity
+ 
+ # *DOCUMENTATION*
+@@ -647,7 +647,7 @@
+ 
+ 
+ ifeq ($(KBUILD_EXTMOD),)
+-core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/
++core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/ ptag/
+ 
+ vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
+ 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/ptag/Kconfig /media/other/lin/ptag/Kconfig
+--- /media/other/linux-2.6.32.60/ptag/Kconfig	1969-12-31 17:00:00.000000000 -0700
++++ /media/other/lin/ptag/Kconfig	2014-11-04 23:57:36.000000000 -0700
+@@ -0,0 +1,6 @@
++config PTAG
++	bool "A simple systemm call"
++	default y
++	---help---
++	Prints a message whhen called from userrland
++
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/ptag/Makefile /media/other/lin/ptag/Makefile
+--- /media/other/linux-2.6.32.60/ptag/Makefile	1969-12-31 17:00:00.000000000 -0700
++++ /media/other/lin/ptag/Makefile	2014-10-30 16:43:12.000000000 -0600
+@@ -0,0 +1 @@
++obj-$(CONFIG_PTAG):= ptag.o
+diff -urN -X /media/other/lin/Documentation/dontdiff /media/other/linux-2.6.32.60/ptag/ptag.c /media/other/lin/ptag/ptag.c
+--- /media/other/linux-2.6.32.60/ptag/ptag.c	1969-12-31 17:00:00.000000000 -0700
++++ /media/other/lin/ptag/ptag.c	2014-11-09 23:05:12.515263988 -0700
+@@ -0,0 +1,130 @@
++/*
++ * ptag.c: is a system all that takes a pid and a tag
++ * 	   and creates a doubly linked list of tags
++ *	   for a given process. Or moves given tag
++ *
++ *
++ *
++ */
++
++#include <linux/string.h>
++#include <linux/kernel.h>
++#include <linux/linkage.h>
++#include <linux/pid.h>
++#include <linux/sched.h>
++#include <linux/list.h>
++#include <asm/uaccess.h>
++
++asmlinkage long sys_ptag(pid_t pid, int func, char * tag, int size, int uid)
++{
++	/*
++	 * Stores the task struct of a process in ts
++	 * so that we can change it's ptag stuff
++	 */
++	struct task_struct *ts;
++	struct task_struct *aTask;	
++	char *temp_tag;
++	int num_bytes;
++	int p_exists;
++	struct tag_list *temp_list = kmalloc(sizeof *temp_list, GFP_KERNEL);
++	struct tag_list *supertest = kmalloc(sizeof *supertest, GFP_KERNEL);
++	struct list_head *pos = kmalloc(sizeof *pos, GFP_KERNEL);
++	struct tag_list *test = kmalloc(sizeof *test, GFP_KERNEL);
++	struct tag_list *test2 = kmalloc(sizeof *test2, GFP_KERNEL);
++	struct tag_list *entry = kmalloc(sizeof *entry, GFP_KERNEL);
++	ts = pid_task(find_vpid((pid_t) pid), PIDTYPE_PID);
++	
++	p_exists = 0;
++	for_each_process(aTask)
++	{
++		if(aTask->pid == pid)
++			p_exists =1;
++
++	}
++
++	if(p_exists == 0)
++		return 0;
++
++
++	if(ts->cred->uid != current->cred->uid )
++		return 0;
++
++	temp_tag = (char *) kmalloc((size+1), GFP_KERNEL);	
++	num_bytes = strncpy_from_user(temp_tag, tag, size+1);
++
++	ts->ptag = (char *) kmalloc(size+1, GFP_KERNEL);
++	temp_list->tag_name = (char *) kmalloc(size+1, GFP_KERNEL);
++
++	memcpy(temp_list->tag_name, temp_tag, size+1);
++	entry->tag_name = (char *) kmalloc(size+1, GFP_KERNEL);
++
++
++	/*
++	 * func == 1 means add a tag
++	 * func == 0 means moved a tag
++	 */
++	if (func == 1)
++	{
++
++	/*
++	 * Does this process already have a linked list made?
++	 * If it does, is_init = 1
++	 * If it does not, is_init = 0
++	 */
++	
++	
++		if((ts->is_init) == 0)
++		{
++			//-- First we initalize the list 
++			INIT_LIST_HEAD(&(ts->myList.list));
++			
++			//-- Then we add a new element to the list
++			list_add(&(temp_list->list), &(ts->myList.list));
++
++			ts->is_init = 1;
++		}
++		else 
++		{
++			//-- Just add it to the list
++			list_add(&(temp_list->list), &(ts->myList.list));
++		}
++
++	 
++	}
++	else if (func == 0)
++	{
++		/*
++		 * How should we remove tags?
++		 * -- Traverse through the doubly linked list and when we find
++		 *    an element that has a matching tag_name we call list_del on that node
++		 * -- Assumes that there is tags for this list
++		 *    beacuse checking is done else where
++ 		 */
++
++		
++	if (temp_tag != NULL)
++	{
++		  list_for_each_entry(test, &(ts->myList.list), list )
++		  {
++			
++			entry = list_entry(&(test->list), struct tag_list, list);
++			//If the tag_name matches wat the user wants
++			
++				if ( strcmp(entry->tag_name, temp_tag) == 0) 
++				{
++				__list_del(entry->list.prev, entry->list.next);
++				}
++			
++		  }		
++	}  
++	
++		
++	}
++	else
++	{
++		//Do stuff to handle and error in here
++	}
++
++	return 0;
++}
++

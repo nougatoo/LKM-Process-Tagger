@@ -1,0 +1,207 @@
+247c247,258
+< 	struct pid *pid;
+---
+> 	/* 
+> 	 * Define in : pid.h @57
+> 	 * Type: struct of type pid
+> 	 * Summary: Just declaring a pointer to a struct for later use
+> 	 */
+> 	struct pid *pid; 
+> 
+> 	/* 
+> 	 * Defined in: pid.h @6
+> 	 * Type: pid_type
+> 	 * Summary: Declaring a variable of pid_type for later use
+> 	 */
+248a260,265
+> 
+> 	/* 
+> 	 * Define in: primitive int type
+> 	 * Type: int
+> 	 * Summary: Just declaring two variables n & r for later use
+> 	 */
+249a267,272
+> 
+> 	/* 
+> 	 * Defined in: pid_namespace.h @19
+> 	 * Type: struct of pid_namespace
+> 	 * Summary: Declaring a pointer to a struct of type pid_namespace
+> 	 */
+250a274,279
+> 
+> 	/* 
+> 	 * Defined in: pid.h @50
+> 	 * Type: struct of type up_pid
+> 	 * Summary: Declaring a pointer to a struct of type upid
+> 	 */
+252a282,286
+> 	/* 
+> 	 * Defined in: pid.c @244 (uncommented)
+> 	 * Type: type pid
+> 	 * Summary: allocing CACHED kernel memory for pid
+> 	 */
+253a288,293
+> 
+> 	/* 
+> 	 * Defined in: pid.c @244 (uncommented)
+> 	 * Type: pid
+> 	 * Summary: if statement checking to see if variable pid == 0;
+> 	 */
+254a295,300
+>  	
+> 	/* 
+> 	 * Defined in: --
+> 	 * Type: --
+> 	 * Summary: if !pid evaluated true, go to our (@279 pid.c)
+> 	 */
+256a303,307
+> 	/* 
+> 	 * Defined in: pid.c @247
+> 	 * Type: struct of pid_namespace
+> 	 * Summary: assing the pointer tmp to the pointer passed to this function
+> 	 */
+257a309,314
+> 
+> 	/* 
+> 	 * Defined in: ns is passed to the function
+> 	 * Type: ns->level is of type pid_namespace
+> 	 * Summary: a for-loop that executes ns-level times
+> 	 */
+258a316,321
+> 
+> 	/* 
+> 	 * Defined in: pid.c @246
+> 	 * Type: int
+> 	 * Summary: creates a map of pids and assigns nr = -1 or nr = pid
+> 	 */
+259a323,328
+> 
+> 	/* 
+> 	 * Defined in: pid.c @246
+> 	 * Type: int
+> 	 * Summary: if nr was return as less than zero, go to out_free (pid.c @282)
+> 	 */
+260a330,335
+> 	
+> 	/* 
+> 	 * Defined in: --
+> 	 * Type: --
+> 	 * Summary: jump to pid.c @282
+> 	 */
+262a338,342
+> 	/* 
+> 	 * Pid define in pid.c @244, nr defined in pid.c @246
+> 	 * Type: pid is of type pid, and nr is of type int
+> 	 * Summary: assigns pids->numbers[i].nr to our nr, which we got from alloc_pid(map)
+> 	 */
+263a344,349
+> 
+> 	/* 
+> 	 * Pid define in pid.c @244, ns given to us
+> 	 * Type: pid is of type pid, ns is of type namespace
+> 	 * Summary: assigns pids->numbers[i].ns to the namespace given to us
+> 	 */
+264a351,356
+> 
+> 	/* 
+> 	 * Defined in: pid.c @247
+> 	 * Type: pid_namespace
+> 	 * Summary: tmp points to ns given to us, so change ns pointer to point to it's parent now
+> 	 */
+267a360,364
+> 	/* 
+> 	 * get_pid_ns is define in pid_namespace.h @38
+> 	 * Type: get_pid_ns returns a type of struct namespace
+> 	 * Summary: returns a namespace for a given pid
+> 	 */
+268a366,371
+> 
+> 	/* 
+> 	 * Defined in: pid->level defined in pid.h @60
+> 	 * Type: type int
+> 	 * Summary: changes our struc pid's level to ns's level
+> 	 */
+269a373,378
+> 
+> 	/* 
+> 	 * Defined in: atomic_set defined in atomic.h @180
+> 	 * Type: returns nothing
+> 	 * Summary: a locking mechanism 
+> 	 */
+270a380,385
+> 
+> 	/* 
+> 	 * Defined in: the variable 'type' is defined at pid.c @245
+> 	 * Type: enum pid_type
+> 	 * Summary: a for loop that initializes list heads the number in max pidtype
+> 	 */
+271a387,392
+> 
+> 	/* 
+> 	 * Defined in: list.h @550
+> 	 * Type: returns nothing
+> 	 * Summary: initializes a node for a linked list 
+> 	 */
+273a395,399
+> 	/* 
+> 	 * Defined in: spinlock.h @260
+> 	 * Type: 
+> 	 * Summary: locks are pid map so we can do work on it
+> 	 */
+274a401,406
+> 
+> 	/* 
+> 	 * Defined in: --
+> 	 * Type: --
+> 	 * Summary: forloop that executes ns->level times, starting with the highest value
+> 	 */
+275a408,413
+> 
+> 	/* 
+> 	 * Defined in: pid.c @248
+> 	 * Type: type upid
+> 	 * Summary: assings upid pointer to pid->numbers[i]
+> 	 */
+276a415,420
+> 
+> 	/* 
+> 	 * Defined in: hlist_add_head_rcu defined in rculist.h @328
+> 	 * Type: returns nothing
+> 	 * Summary: adds a node of a linked list of pids
+> 	 */
+279a424,429
+> 
+> 	/* 
+> 	 * Defined in: spinlock.h @269
+> 	 * Type: --
+> 	 * Summary: unlocks our pid map because we're done with it
+> 	 */
+282a433,437
+> 	/* 
+> 	 * Defined in: pid.c @244
+> 	 * Type: struct of type pid
+> 	 * Summary: return pointer to pid to caller
+> 	 */
+285a441,445
+> 	/* 
+> 	 * Defined in: --
+> 	 * Type: --
+> 	 * Summary: while loop that frees all level of our pid map that we allocated
+> 	 */
+288a449,452
+> 	/* 
+> 	 * Defined in: slab.h @ 101
+> 	 * Summary: frees the cached memory that we allocated previously
+> 	 */
+289a454,459
+> 
+> 	/* 
+> 	 * Defined in: pid.c @244
+> 	 * Type: struct of type pid
+> 	 * Summary: make it point to nothing
+> 	 */
+290a461,464
+> 
+> 	/*
+> 	 * Summary: jump to out label in pid.c @279
+> 	 */
